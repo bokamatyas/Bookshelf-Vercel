@@ -32,11 +32,5 @@
             "src": "/(.*)",
             "dest": "/index.html"
         }
-    ],
-    "rewrites": [
-        {
-            "source": "/book-item/:id",
-            "destination": "/index.html"
-        }
     ]
 }
