@@ -1,0 +1,11 @@
+identifier: mf88e2u88bccp7ta
+appPort: 1864
+staticPort: 1668
+reloadPort: 2667
+hostName: localhost
+projectName: frontend
+homeFolder: 'b:\_Jedlik\Final\Bookshelf\frontend'
+distFolder: dist/frontend
+outDir: 'b:\_Jedlik\Final\Bookshelf\frontend\dist\static\'
+handle404: ''
+allowErrorCollect: true

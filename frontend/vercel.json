@@ -5,7 +5,7 @@
             "src": "package.json",
             "use": "@vercel/static-build",
             "config": {
-                "distDir": "dist/frontend/browser"
+                "distDir": "dist/static"
             }
         }
     ],
@@ -16,17 +16,27 @@
         },
         {
             "src": "/(.*)\\.(js|webp|png|jpg|ico|svg|woff2|woff|ttf|otf|eot|json)$",
-            "headers": { "Content-Type": "text/javascript" },
+            "headers": {
+                "Content-Type": "text/javascript"
+            },
             "dest": "/$1.$2"
         },
         {
             "src": "/(.*)\\.css$",
-            "headers": { "Content-Type": "text/css" },
+            "headers": {
+                "Content-Type": "text/css"
+            },
             "dest": "/$1.css"
         },
         {
             "src": "/(.*)",
             "dest": "/index.html"
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/book-item/:id",
+            "destination": "/index.html"
         }
     ]
 }
