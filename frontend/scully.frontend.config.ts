@@ -1,4 +1,5 @@
 import { ScullyConfig } from '@scullyio/scully';
+import chrome from 'chrome-aws-lambda';
 
 export const config: ScullyConfig = {
     projectRoot: "./src",
@@ -21,8 +22,10 @@ export const config: ScullyConfig = {
         '/summary-item'
     ],
     puppeteerLaunchOptions: {
-      executablePath: process.env['CHROMIUM_PATH'] || '/usr/bin/chromium',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      timeout: 120000
+        executablePath: chrome.executablePath,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        timeout: 180000,
+        headless: true,
+        slowMo: 50
     }
 };
