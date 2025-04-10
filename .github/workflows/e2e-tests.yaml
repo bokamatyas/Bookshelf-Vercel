@@ -45,14 +45,22 @@ jobs:
       - name: Run E2E tests
         working-directory: frontend
         run: |
+          # Install wait-on first to prevent ad-hoc installation
+          npm install wait-on --no-save
+
           echo "Starting backend server..."
           cd ../backend && nohup npm start > backend.log 2>&1 &
-          
+
           echo "Starting frontend server..."
           nohup npm run start > frontend.log 2>&1 &
-          
+
           echo "Waiting for servers to be ready..."
-          npx wait-on http://localhost:4200
-          
+          npx wait-on -t 300000 http://localhost:4200 http://localhost:3000  # Adjust ports as needed
+
           echo "Running Cypress tests..."
           npx cypress run --browser chrome --headless
+
+          # Cleanup processes
+          pkill -f "node.*(nodemon|ng serve)"
+          fuser -k 4200/tcp || true
+          fuser -k 3000/tcp || true
