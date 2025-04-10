@@ -52,7 +52,7 @@ jobs:
 
           echo "Starting backend server..."
           echo "Starting frontend server..."
-          nohup npm run test:env
+          nohup npm run sharp
 
           echo "Checking ports..."
           timeout 60 bash -c 'until nc -z localhost 4200; do sleep 1; done' || echo "Frontend port not ready"
