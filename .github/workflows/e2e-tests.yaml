@@ -5,10 +5,12 @@ on:
     branches: 
       - main
       - E2E
+      - frontend
   pull_request:
     branches: 
       - main
       - E2E
+      - frontend
 
 jobs:
   cypress-e2e:
