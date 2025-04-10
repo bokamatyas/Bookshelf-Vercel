@@ -5,15 +5,14 @@ on:
     branches: 
       - main
       - E2E
-      - frontend
+
   pull_request:
     branches: 
       - main
       - E2E
-      - frontend
 
 jobs:
-  cypress-e2e:
+  e2e:
     runs-on: ubuntu-latest
     services:
       mongodb:
@@ -45,19 +44,33 @@ jobs:
       - name: Run E2E tests
         working-directory: frontend
         run: |
-          # Install wait-on first to prevent ad-hoc installation
-          npm install wait-on --no-save
+          # Install essential tools
+          sudo apt-get install -y netcat
 
+          # Start backend with explicit host binding
           echo "Starting backend server..."
-          cd ../backend && nohup npm start > backend.log 2>&1 &
+          cd ../backend && nohup npm start -- --host 0.0.0.0 > backend.log 2>&1 &
 
+          # Start frontend with explicit host and port
           echo "Starting frontend server..."
-          nohup npm run start > frontend.log 2>&1 &
+          nohup npm run start -- --host 0.0.0.0 --port 4200 > frontend.log 2>&1 &
 
-          echo "Waiting for servers to be ready..."
-          npx wait-on -t 300000 http://localhost:4200 http://localhost:3000  # Adjust ports as needed
+          # Verify port accessibility
+          echo "Checking ports..."
+          timeout 20 bash -c 'until nc -z localhost 4200; do sleep 1; done' || echo "Frontend port not ready"
+          timeout 20 bash -c 'until nc -z localhost 3000; do sleep 1; done' || echo "Backend port not ready"
 
-          echo "Running Cypress tests..."
+          # Wait with detailed logging
+          echo "Waiting for servers..."
+          npx wait-on -v -t 300000 http://localhost:4200 http://localhost:3000
+
+          # Debug output
+          echo "Server processes:"
+          ps aux | grep -E '(nodemon|ng serve)'
+          echo "Open ports:"
+          netstat -tulpn
+
+          # Run tests
           npx cypress run --browser chrome --headless
 
           # Cleanup processes
