@@ -1,38 +1,11 @@
-name: E2E Tests
-
-on:
-  push:
-    branches: 
-      - main
-      - E2E
-
-  pull_request:
-    branches: 
-      - main
-      - E2E
-
+name: End-to-end tests
+on: push
 jobs:
-  E2E:
-    runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
+  cypress-run:
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'npm'      
-
-      - name: Run E2E tests
-        env:
-            DATABASE_URL: mongodb://mongodb:27017/Bookshelf
-            JWT_SECRET: temporary_test_secret
-        working-directory: frontend
-        run: |
-          npm run test:e2e
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
