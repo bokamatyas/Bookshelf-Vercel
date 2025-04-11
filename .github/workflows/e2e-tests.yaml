@@ -29,18 +29,10 @@ jobs:
           node-version: 18
           cache: 'npm'      
 
-      - name: Start backend
-        working-directory: backend
-        run: npm run test:cypress
-
-      - name: Start frontend
-        working-directory: frontend
-        run: npm run test:e2e
-
       - name: Run E2E tests
         env:
             DATABASE_URL: mongodb://mongodb:27017/Bookshelf
             JWT_SECRET: temporary_test_secret
         working-directory: frontend
         run: |
-          npx cypress run --browser chrome --headless
+          npm run test:e2e
