@@ -1,12 +1,80 @@
-name: End-to-end tests
-on: push
+name: End-to-End Cypress Tests
+
+on:
+  push:
+    branches: 
+      - main
+      - E2E
+  pull_request:
+    branches:
+      - main
+      - E2E
+
 jobs:
-  cypress-run:
-    runs-on: ubuntu-24.04
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+        options: >
+          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cypress run
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Seed MongoDB for Backend
+        working-directory: ./backend
+        run: |
+          echo "Waiting for MongoDB to be ready..."
+          until mongo --host localhost --quiet --eval "db.adminCommand('ping')"; do
+            echo "Waiting for MongoDB..."
+            sleep 5
+          done
+          echo "Seeding database..."
+          node seed.js
+
+      - name: Start Node.js Backend
+        working-directory: ./backend
+        run: |
+          nohup npm start > backend.log 2>&1 &
+          echo "Backend started on port 3000."
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build Angular Frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Start Angular Frontend
+        working-directory: ./frontend
+        run: |
+          nohup npm start > frontend.log 2>&1 &
+          echo "Frontend started on port 4200."
+
+      - name: Wait for Backend and Frontend
+        run: |
+          npx wait-on http://localhost:3000 http://localhost:4200
+          echo "Backend and frontend are up!"
+
+      - name: Run Cypress End-to-End Tests
         uses: cypress-io/github-action@v6
-        working-directory: frontend
+        with:
+          config: baseUrl=http://localhost:4200
