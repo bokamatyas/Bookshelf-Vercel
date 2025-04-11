@@ -1,38 +1,46 @@
-# name: Angular E2E Tests
+name: E2E Tests
 
-# on:
-#   push:
-#     branches: 
-#       - main
-#       - E2E
-#       - frontend
-#   pull_request:
-#     branches:
-#       - main
-#       - E2E
-#       - frontend
-# jobs:
-#   e2e:
-#     runs-on: ubuntu-latest
+on:
+  push:
+    branches: 
+      - main
+      - E2E
 
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v4
+  pull_request:
+    branches: 
+      - main
+      - E2E
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: 18
-#           cache: 'npm'
-#           cache-dependency-path: frontend/package-lock.json
+jobs:
+  E2E:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       - name: Install Frontend Dependencies
-#         run: npm ci
-#         working-directory: frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'      
 
-#       - name: Install Backend Dependencies
-#         run: cd backend && npm ci
+      - name: Start backend
+        working-directory: backend
+        run: npm run test:cypress
 
-#       - name: Run E2E Tests
-#         run: npm run test:e2e
-#         working-directory: frontend
+      - name: Start frontend
+        working-directory: frontend
+        run: npm run test:e2e
+
+      - name: Run E2E tests
+        env:
+            DATABASE_URL: mongodb://mongodb:27017/Bookshelf
+            JWT_SECRET: temporary_test_secret
+        working-directory: frontend
+        run: |
+          npx cypress run --browser chrome --headless
