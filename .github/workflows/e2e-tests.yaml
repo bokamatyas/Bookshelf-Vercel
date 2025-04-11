@@ -1,79 +1,67 @@
-name: End-to-End Cypress Tests
+name: Cypress E2E Tests
 
 on:
   push:
-    branches: 
+    branches:
       - main
-      - E2E
   pull_request:
     branches:
       - main
-      - E2E
 
 jobs:
-  e2e:
+  e2e-tests:
     runs-on: ubuntu-latest
-
     services:
       mongodb:
         image: mongo:4.4
         ports:
           - 27017:27017
-        options: >
-          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
 
+      # Setup Node environment
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
-          node-version: '16'
+          node-version: '14'
 
-      - name: Install Backend Dependencies
-        working-directory: ./backend
-        run: npm ci
-
-      - name: Seed MongoDB for Backend
-        working-directory: ./backend
-        run: |
-          echo "Waiting for MongoDB to be ready..."
-          until mongo --host localhost --quiet --eval "db.adminCommand('ping')"; do
-            echo "Waiting for MongoDB..."
-            sleep 5
-          done
-          echo "Seeding database..."
-          node seed.js
-
+      # Install dependencies (both backend and frontend if sharing the same package.json, or run multiple installs as needed)
+      - name: Install dependencies
+        run: npm install
+      
+      # Seed the MongoDB database with a .js seed file (adjust path to your seed file)
+      - name: Seed Database
+        run: node ./path/to/seed.js
+      
+      # Start the Node.js backend in the background
       - name: Start Node.js Backend
-        working-directory: ./backend
         run: |
-          nohup npm start > backend.log 2>&1 &
-          echo "Backend started on port 3000."
+          npm run start:backend &
+          # Allow some time for the backend to start
+          sleep 10
 
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build Angular Frontend
-        working-directory: ./frontend
-        run: npm run build
-
+      # Start the Angular frontend in the background
       - name: Start Angular Frontend
-        working-directory: ./frontend
         run: |
-          nohup npm start > frontend.log 2>&1 &
-          echo "Frontend started on port 4200."
+          npm run start:frontend &
+          # Allow some time for the frontend to start
+          sleep 10
 
-      - name: Wait for Backend and Frontend
-        run: |
-          npx wait-on http://localhost:3000 http://localhost:4200
-          echo "Backend and frontend are up!"
+      # Optional: Wait additional seconds to ensure all services are fully running
+      - name: Wait for services to stabilize
+        run: sleep 10
 
-      - name: Run Cypress End-to-End Tests
-        uses: cypress-io/github-action@v6
+      # Run the Cypress tests using the official Cypress GitHub Action
+      - name: Run Cypress Tests
+        uses: cypress-io/github-action@v2
         with:
-          config: baseUrl=http://localhost:4200
+          # If you have a custom command, make sure it points to your Cypress run command
+          command: npm run cy:run
