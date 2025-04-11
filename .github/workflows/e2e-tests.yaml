@@ -8,5 +8,5 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cypress run
-        working-directory: frontend
         uses: cypress-io/github-action@v6
+        working-directory: frontend
