@@ -33,5 +33,6 @@ jobs:
         env:
             DATABASE_URL: mongodb://mongodb:27017/Bookshelf
             JWT_SECRET: temporary_test_secret
+        working-directory: frontend
         run: |
           npm run test:e2e
